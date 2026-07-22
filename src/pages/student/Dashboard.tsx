@@ -37,7 +37,7 @@ export default function StudentDashboard() {
 
   const today = now.toISOString().slice(0, 10);
   const todayAtt = attendance.find((a) => a.date === today);
-  const presentDays = attendance.filter((a) => a.attendance_status === "present" || a.attendance_status === "manual").length;
+  const presentDays = attendance.filter((a) => a.attendance_status === "present" || a.attendance_status === "manual" || a.attendance_status === "late").length;
   const totalDays = attendance.length;
   const absentDays = attendance.filter((a) => a.attendance_status === "absent").length;
   const percentage = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0;
