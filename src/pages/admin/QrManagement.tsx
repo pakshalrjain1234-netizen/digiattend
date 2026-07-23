@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Trash2, QrCode, Loader2, Eye, Printer } from "lucide-react";
+import { Plus, Trash2, QrCode, Loader2, Printer } from "lucide-react";
 import QRCode from "qrcode.react";
 import AdminLayout from "../../components/AdminLayout";
 import { supabase, callEdgeFunction } from "../../lib/supabase";
@@ -14,7 +14,7 @@ export default function QrManagement() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [previewCode, setPreviewCode] = useState<string | null>(null);
+  const [printQR, setPrintQR] = useState<{ code: string; label: string } | null>(null);
 
   useEffect(() => {
     fetchQrs();
@@ -56,15 +56,14 @@ export default function QrManagement() {
   };
 
   const handlePrint = (code: string, label: string) => {
-    setPreviewCode(code);
-    // Wait for DOM to update, then print
+    setPrintQR({ code, label });
+    // Allow DOM to update, then trigger print
     setTimeout(() => {
       window.print();
-    }, 100);
+      // Reset after printing (optional)
+      setTimeout(() => setPrintQR(null), 500);
+    }, 200);
   };
-
-  // When printing, we render a hidden div with the QR image
-  const printQRData = previewCode;
 
   return (
     <AdminLayout>
@@ -74,9 +73,38 @@ export default function QrManagement() {
           <p className="text-sm text-slate-500 mt-1">Generate and manage static QR codes for attendance.</p>
         </div>
 
+        {/* -------- Inline Print Styles -------- */}
+        <style>{`
+          @media print {
+            body * {
+              visibility: hidden !important;
+            }
+            .print-area,
+            .print-area * {
+              visibility: visible !important;
+            }
+            .print-area {
+              position: fixed !important;
+              left: 0 !important;
+              top: 0 !important;
+              width: 100% !important;
+              height: 100% !important;
+              background: white !important;
+              display: flex !important;
+              flex-direction: column !important;
+              align-items: center !important;
+              justify-content: center !important;
+              z-index: 9999 !important;
+            }
+            .no-print {
+              display: none !important;
+            }
+          }
+        `}</style>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Form */}
-          <div className="card p-6">
+          {/* -------- Form (no-print) -------- */}
+          <div className="card p-6 no-print">
             <form onSubmit={handleSave} className="space-y-4">
               <div>
                 <label className="label">Label (Classroom Name)</label>
@@ -114,7 +142,7 @@ export default function QrManagement() {
               </button>
             </form>
 
-            {/* Preview */}
+            {/* Preview (only if code exists) */}
             {form.code && (
               <div className="mt-6 p-4 border rounded-xl bg-slate-50 flex flex-col items-center">
                 <p className="text-xs text-slate-500 mb-2">Preview</p>
@@ -124,8 +152,8 @@ export default function QrManagement() {
             )}
           </div>
 
-          {/* List */}
-          <div className="card p-6">
+          {/* -------- List of QR Codes (no-print) -------- */}
+          <div className="card p-6 no-print">
             <h2 className="font-display font-semibold text-slate-900 mb-4">Existing QR Codes</h2>
             {loading ? (
               <div className="space-y-2">{[...Array(4)].map((_, i) => <div key={i} className="h-16 rounded-xl shimmer-bg" />)}</div>
@@ -168,15 +196,13 @@ export default function QrManagement() {
         </div>
       </div>
 
-      {/* Hidden print area – only shown when printing */}
-      {printQRData && (
-        <div className="hidden print:block fixed top-0 left-0 w-full h-full bg-white z-50 flex flex-col items-center justify-center p-8">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-slate-800 mb-4">Scan to Mark Attendance</h2>
-            <QRCode value={printQRData} size={300} level="H" includeMargin />
-            <p className="text-sm text-slate-500 mt-4 font-mono">{printQRData}</p>
-            <p className="text-xs text-slate-400 mt-2">Room: {qrs.find(q => q.code === printQRData)?.label || ""}</p>
-          </div>
+      {/* -------- Hidden Print Area (only visible during print) -------- */}
+      {printQR && (
+        <div className="print-area">
+          <h2 className="text-3xl font-bold text-slate-800 mb-6">Scan to Mark Attendance</h2>
+          <QRCode value={printQR.code} size={350} level="H" includeMargin />
+          <p className="text-sm text-slate-500 mt-6 font-mono">{printQR.code}</p>
+          <p className="text-xs text-slate-400 mt-2">{printQR.label}</p>
           <p className="absolute bottom-8 text-xs text-slate-400">DigiAttend QR Code</p>
         </div>
       )}
