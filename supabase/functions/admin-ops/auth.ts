@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient, User } from "npm:@supabase/supabase-js@2.57.4";
-import { errorResponse } from "./cors.ts";   // ✅ correct import
+import { errorResponse } from "./cors.ts";
 
 export function adminClient(): SupabaseClient {
   const url = Deno.env.get("SUPABASE_URL");
