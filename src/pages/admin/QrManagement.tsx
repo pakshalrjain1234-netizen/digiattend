@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Plus, Trash2, QrCode, Loader2, Printer } from "lucide-react";
-import QRCode from "qrcode.react";
+import QRCode from "react-qr-code";
 import AdminLayout from "../../components/AdminLayout";
 import { supabase, callEdgeFunction } from "../../lib/supabase";
 import { EmptyState } from "../../components/ui";
